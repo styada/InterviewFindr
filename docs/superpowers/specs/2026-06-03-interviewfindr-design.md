@@ -827,7 +827,7 @@ Each stage in §7 is independently testable.
 
 These are not blockers for the design but should be resolved before implementation:
 
-1. **Auth method:** magic link via email vs username+password. Magic link is more secure (no password to leak) but requires email sending infrastructure. Username+password is simpler. Default: **magic link** via a transactional email provider (Resend or Postmark, free tier covers our volume).
+1. **Auth method:** **username + password (argon2id hash).** Single-family personal tool, so the email-sending dependency of magic-link is overkill. The admin creates family-member accounts; each member sets their password on first login.
 2. **Notification channel:** how do we tell the family "new matches are ready"? Options: in-app only, email digest, push notification (requires service worker), Telegram bot. Default: **email digest** daily + in-app feed.
 3. **Multi-language support:** currently US-primary. If a family member's profile needs Spanish, French, or Hindi JD parsing and tailoring, that's a Stage 2 / 5 prompt change. Default: **English only** for v1.
 4. **Mobile UI:** design is responsive (Tailwind), but some flows (uploading a resume, reviewing tailoring) work better on desktop. Acceptable for v1.
