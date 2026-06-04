@@ -84,7 +84,7 @@ Self-hosted web application on the user's existing Hostinger VPS. Three layers.
 - Scheduler: APScheduler in-process (start with); can move to dedicated worker if cron needs grow
 - Container: Docker Compose
 - ATS HTTP client: httpx (async)
-- PDF generation: WeasyPrint (HTML→PDF) or Pandoc (Markdown→PDF) for tailored resumes
+- PDF generation: WeasyPrint (HTML→PDF) for tailored resumes, with Pandoc as a fallback for edge cases
 
 **Why Python:** Best LLM SDK coverage, best resume-parsing ecosystem (pdfplumber, python-docx), FastAPI is fast to build in. No JVM/JS deployment complexity.
 
@@ -422,10 +422,10 @@ sources:
 
 ### 6.1 Inputs
 - **Resume file:** PDF and/or DOCX upload via the web UI.
-- **LinkedIn import:** Three options, in order of preference:
-  1. Manual paste of LinkedIn profile export (the ZIP that LinkedIn provides under *Settings → Data Privacy → Get a copy of your data*).
-  2. User pastes LinkedIn profile URL; we extract the public profile HTML.
-  3. Manual: user fills structured fields in the UI.
+- **LinkedIn import:** Three options, in order of preference. The first option is the only fully ToS-clean path; the others are fallbacks.
+  1. **Official data export (preferred):** user pastes the ZIP that LinkedIn provides under *Settings → Data Privacy → Get a copy of your data*. Pre-structured JSON inside. No scraping, no ToS concerns, and LinkedIn cannot ban an account for this.
+  2. **Manual paste of profile text:** user copies their public profile page text and we structure it. Reads the public HTML the user themselves can see, no automated requests.
+  3. **Public profile URL fetch (fallback, with caveat):** user pastes their own profile URL; we fetch the public HTML. This is the same gray area as scraping any other LinkedIn page — useful for one-time import, but we rate-limit aggressively (one request per profile per refresh) and surface a warning that aggressive use could affect the user's account. Not used for anything other than the user's own profile.
 
 ### 6.2 Parsing
 - **PDF resume:** `pdfplumber` for layout, `pdfminer.six` as fallback. Extract text, then LLM call to structure into a `resume_parsed_json` schema (see below).
@@ -461,7 +461,7 @@ sources:
 The skill graph is the **structured** representation: each skill carries years-of-experience and context (industry/role). This is what Stage 3 matches against.
 
 ### 6.3 Tailored output format
-- **PDF:** WeasyPrint rendering an HTML template. Standard fonts (Helvetica/Arial), no tables for layout, no images. Selectable text.
+- **PDF:** WeasyPrint (primary choice) rendering an HTML template. Standard fonts (Helvetica/Arial), no tables for layout, no images, selectable text. Pandoc is the fallback for one-off conversions if WeasyPrint hits a rendering edge case.
 - **DOCX:** `python-docx` (preserves editability in Word).
 - **Per-market template variants:**
   - US: 1-page preferred for <10 yrs experience, 2 pages otherwise. No photo. No DOB.
@@ -700,7 +700,7 @@ Every application records:
 
 **Sources:** All Tier-1 + Tier-2 (heavy remote board usage). USAJobs off.
 
-**LLM:** `opencode_zen` + `kimi-k2.6` default; escalate to `glm-5.1` for partner-level roles.
+**LLM:** `opencode_zen` + `kimi-k2.6` default; escalate to `deepseek-v4-pro` for partner-level roles (same default escalation candidate as the other profiles, configured per-profile in case we want to A/B later).
 
 **Auto-apply:** enabled. Allowlist: `greenhouse, lever, ashby`.
 
