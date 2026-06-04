@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Match detail — InterviewFindr{% endblock %}
+{% block nav %}
+<a href="/me/matches" class="text-slate-700 hover:underline">Matches</a>
+<a href="/auth/logout" class="text-slate-500 hover:underline">Sign out</a>
+{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold">
+  {{ match.job.title if match.job else 'Untitled' }}
+  <span class="text-slate-500 font-normal">
+    @ {{ match.job.company if match.job else '—' }}
+  </span>
+</h1>
+<p class="text-sm text-slate-600 mb-4">
+  Match score:
+  <strong>{{ "%.0f"|format((match.match_score or 0) * 100) }}%</strong>
+  · {{ match.job.location if match.job and match.job.location else '—' }}
+  · status: <span class="uppercase tracking-wide">{{ match.status }}</span>
+</p>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <div class="bg-white p-4 rounded shadow-sm">
+    <h2 class="font-semibold mb-2">Tailored resume</h2>
+    {% if tailored and tailored.resume_pdf_path %}
+      <a href="/me/matches/{{ match.id }}/resume.pdf" class="text-sm underline" target="_blank">
+        Open PDF
+      </a>
+    {% else %}
+      <span class="text-sm text-slate-500">No PDF yet</span>
+    {% endif %}
+    <pre class="text-xs bg-slate-50 p-2 mt-2 rounded overflow-auto whitespace-pre-wrap">
+{{ tailored.resume_text if tailored and tailored.resume_text else 'Not generated' }}
+    </pre>
+  </div>
+
+  <div class="bg-white p-4 rounded shadow-sm">
+    <h2 class="font-semibold mb-2">Cover letter</h2>
+    {% if tailored and tailored.cover_letter_pdf %}
+      <a href="/me/matches/{{ match.id }}/cover_letter.pdf" class="text-sm underline" target="_blank">
+        Open PDF
+      </a>
+    {% else %}
+      <span class="text-sm text-slate-500">No PDF yet</span>
+    {% endif %}
+    <pre class="text-xs bg-slate-50 p-2 mt-2 rounded overflow-auto whitespace-pre-wrap">
+{{ tailored.cover_letter_text if tailored and tailored.cover_letter_text else 'Not generated' }}
+    </pre>
+  </div>
+</div>
+
+<div class="mt-4 flex items-center space-x-2">
+  <button hx-post="/me/matches/{{ match.id }}/skip"
+          hx-target="#status"
+          hx-swap="innerHTML"
+          class="text-sm bg-slate-200 px-3 py-1 rounded">
+    Skip
+  </button>
+  <button hx-post="/me/matches/{{ match.id }}/apply/assisted"
+          hx-target="#apply-status"
+          hx-swap="innerHTML"
+          class="text-sm bg-slate-900 text-white px-3 py-1 rounded">
+    Build apply kit
+  </button>
+  <span id="status" class="text-sm text-slate-600"></span>
+</div>
+<div id="apply-status" class="mt-3 text-sm text-slate-700"></div>
+
+<div class="mt-6 text-xs text-slate-500">
+  {% if tailored %}
+    Model: {{ tailored.model_used or 'n/a' }}
+    {% if tailored.cost_usd is not none %}
+      · Cost: ${{ "%.4f"|format(tailored.cost_usd) }}
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

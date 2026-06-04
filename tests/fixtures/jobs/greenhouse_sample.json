@@ -1,0 +1,12 @@
+{
+  "jobs": [
+    {
+      "id": 123,
+      "title": "Senior Backend Engineer",
+      "updated_at": "2026-06-01T10:00:00-04:00",
+      "location": { "name": "New York, NY" },
+      "content": "<p>We are looking for a <b>Senior Backend Engineer</b> with Python experience.</p>",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/123"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 11pt; color: #111; }
+  h1 { font-size: 18pt; margin: 0 0 4pt; }
+  h2 { font-size: 12pt; margin: 12pt 0 4pt; border-bottom: 1px solid #999; }
+  .contact { font-size: 9pt; color: #444; margin-bottom: 8pt; }
+  .role { font-weight: bold; }
+  .meta { font-size: 9pt; color: #555; }
+  ul { margin: 4pt 0; }
+</style></head><body>
+<h1>{{ contact.name }}</h1>
+<div class="contact">
+  {{ contact.email }}{% if contact.phone %} · {{ contact.phone }}{% endif %}
+  {% if contact.location %} · {{ contact.location }}{% endif %}
+</div>
+{% if summary %}<p><em>{{ summary }}</em></p>{% endif %}
+<h2>Experience</h2>
+{% for r in experience %}
+  <div class="role">{{ r.title }} — {{ r.company }}</div>
+  <div class="meta">{{ r.start }} – {{ r.end }}{% if r.location %} · {{ r.location }}{% endif %}</div>
+  <ul>{% for b in r.bullets %}<li>{{ b }}</li>{% endfor %}</ul>
+{% endfor %}
+<h2>Education</h2>
+{% for e in education %}<div>{{ e.degree }}{% if e.field %}, {{ e.field }}{% endif %} — {{ e.school }} ({{ e.year }})</div>{% endfor %}
+<h2>Skills</h2>
+<div>{% for s in skills %}{{ s.name }}{% if not loop.last %}, {% endif %}{% endfor %}</div>
+</body></html>

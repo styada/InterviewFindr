@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Matches — InterviewFindr{% endblock %}
+{% block nav %}
+<a href="/me/profile" class="text-slate-700 hover:underline">Profile</a>
+<a href="/auth/logout" class="text-slate-500 hover:underline">Sign out</a>
+{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-semibold">Today's matches</h1>
+  <button hx-post="/jobs/refresh"
+          hx-target="#refresh-status"
+          hx-swap="innerHTML"
+          class="text-sm bg-slate-900 text-white rounded px-3 py-1">
+    Refresh now
+  </button>
+</div>
+<div id="refresh-status" class="text-sm text-slate-600 mb-3"></div>
+
+<div class="space-y-3">
+  {% for m in matches %}
+    <a href="/me/matches/{{ m.id }}"
+       class="block bg-white p-4 rounded shadow-sm hover:shadow transition">
+      <div class="flex justify-between">
+        <div>
+          <div class="font-medium">
+            {{ m.job.title if m.job else 'Untitled' }}
+            @ {{ m.job.company if m.job else '—' }}
+          </div>
+          <div class="text-sm text-slate-600">
+            {{ m.job.location if m.job and m.job.location else '—' }}
+            · match {{ "%.0f"|format((m.match_score or 0) * 100) }}%
+          </div>
+        </div>
+        <div class="text-xs uppercase tracking-wide text-slate-500">{{ m.status }}</div>
+      </div>
+    </a>
+  {% else %}
+    <p class="text-slate-500">No matches yet. Try refreshing.</p>
+  {% endfor %}
+</div>
+{% endblock %}

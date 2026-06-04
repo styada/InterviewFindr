@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}My Profile — InterviewFindr{% endblock %}
+{% block nav %}
+<a href="/me/matches" class="text-slate-700 hover:underline">Matches</a>
+<a href="/auth/logout" class="text-slate-500 hover:underline">Sign out</a>
+{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-6">My Profile</h1>
+<div class="bg-white p-6 rounded-lg shadow-sm space-y-4 max-w-2xl">
+  <form hx-patch="/me/profile" hx-target="#profile-status" hx-swap="innerHTML" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium">Default LLM model</label>
+      <input name="llm_default_model" value="{{ profile.llm_default_model }}"
+             class="mt-1 w-full border rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Market (primary)</label>
+      <input name="market_primary" value="{{ profile.market_primary }}" maxlength="2"
+             class="mt-1 w-full border rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Min salary (USD, leave blank if open)</label>
+      <input name="salary_min" type="number"
+             value="{{ profile.preferences.get('salary_min', '') }}"
+             class="mt-1 w-full border rounded px-3 py-2">
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Auto-apply enabled</label>
+      <input name="auto_apply_enabled" type="checkbox"
+             {% if profile.auto_apply_enabled %}checked{% endif %}
+             class="mt-1">
+    </div>
+    <button type="submit" class="bg-slate-900 text-white rounded px-4 py-2 text-sm">Save</button>
+    <div id="profile-status" class="text-sm text-slate-600"></div>
+  </form>
+
+  <hr class="my-6">
+
+  <div>
+    <h2 class="font-semibold mb-2">Upload resume (PDF, DOCX, or plain text)</h2>
+    <input type="file" id="resume-file" accept=".pdf,.docx,.txt" class="mt-1 w-full">
+    <button hx-post="/me/profile/resume"
+            hx-target="#resume-status"
+            hx-swap="innerHTML"
+            hx-encoding="multipart/form-data"
+            hx-include="#resume-file"
+            class="mt-2 bg-slate-900 text-white rounded px-4 py-2 text-sm">
+      Upload &amp; structure
+    </button>
+    <div id="resume-status" class="mt-2 text-sm text-slate-600"></div>
+  </div>
+
+  <div class="mt-4 text-xs bg-slate-50 p-3 rounded">
+    {% if profile.resume_parsed_json %}
+      <div class="font-medium mb-1">Parsed resume (JSON)</div>
+      <pre class="overflow-auto max-h-64">{{ profile.resume_parsed_json | tojson(indent=2) }}</pre>
+    {% else %}
+      <div class="text-slate-500">No resume uploaded yet.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
