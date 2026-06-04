@@ -1,0 +1,8 @@
+# InterviewFindr Caddy reverse proxy.
+# APP_DOMAIN env var (defaults to localhost) controls the served hostname.
+# Caddy automatically provisions Let's Encrypt certs when APP_DOMAIN is a real domain.
+
+{$APP_DOMAIN:localhost} {
+    reverse_proxy app:8000
+    encode gzip zstd
+}
