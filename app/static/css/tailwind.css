@@ -1,0 +1,3 @@
+/* Placeholder. Build with: tailwindcss -i app/css_input.css -o app/static/css/tailwind.css --minify */
+/* Until the standalone CLI is added, this file provides minimal styling so the login page renders. */
+body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif; }

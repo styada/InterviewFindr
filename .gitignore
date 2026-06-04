@@ -24,6 +24,7 @@ static/css/tailwind.css
 dist/
 build/
 *.min.js
+!app/static/js/htmx.min.js
+!app/static/js/alpine.min.js
 *.min.css
-!static/js/htmx.min.js
-!static/js/alpine.min.js
+!app/static/css/tailwind.css
