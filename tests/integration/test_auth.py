@@ -104,3 +104,29 @@ def test_register_duplicate_email_returns_409(client: TestClient) -> None:
         },
     )
     assert r2.status_code == 409
+
+
+def test_me_with_malformed_session_token_returns_401(client: TestClient) -> None:
+    """Regression: session token containing a non-UUID string should be rejected
+    (not raise a SQLAlchemy StatementError about UUID.hex)."""
+    r = client.get("/auth/me", cookies={"if_session": "not-a-valid-uuid-payload"})
+    assert r.status_code == 401
+
+
+def test_logout_clears_cookie(client: TestClient) -> None:
+    client.post(
+        "/auth/register",
+        data={
+            "email": "lo@example.com",
+            "display_name": "LO",
+            "password": "a-very-long-password-1",
+        },
+    )
+    login = client.post(
+        "/auth/login",
+        data={"email": "lo@example.com", "password": "a-very-long-password-1"},
+    )
+    assert "if_session" in login.cookies
+    logout = client.post("/auth/logout")
+    assert logout.status_code == 200
+    assert "if_session" not in logout.cookies or logout.cookies.get("if_session") in (None, "")

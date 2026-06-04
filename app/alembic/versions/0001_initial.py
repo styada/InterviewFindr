@@ -1,4 +1,4 @@
-"""initial schema
+"""initial schema (SQLite)
 
 Revision ID: 0001_initial
 Revises:
@@ -10,7 +10,6 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 revision: str = "0001_initial"
 down_revision: Union[str, None] = None
@@ -21,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "users",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("email", sa.String(320), nullable=False, unique=True),
         sa.Column("display_name", sa.String(200), nullable=False),
         sa.Column("role", sa.String(20), nullable=False, server_default="member"),
@@ -29,7 +28,7 @@ def upgrade() -> None:
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
     )
@@ -38,26 +37,26 @@ def upgrade() -> None:
         "profiles",
         sa.Column(
             "user_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             primary_key=True,
         ),
         sa.Column("market_primary", sa.String(2), server_default="US", nullable=False),
         sa.Column(
             "market_secondary",
-            postgresql.ARRAY(sa.String),
-            server_default="{}",
+            sa.JSON(),
+            server_default=sa.text("'[]'"),
             nullable=False,
         ),
         sa.Column("resume_pdf_path", sa.Text(), nullable=True),
         sa.Column("resume_docx_path", sa.Text(), nullable=True),
-        sa.Column("resume_parsed_json", postgresql.JSONB(), nullable=True),
+        sa.Column("resume_parsed_json", sa.JSON(), nullable=True),
         sa.Column("linkedin_raw_path", sa.Text(), nullable=True),
-        sa.Column("linkedin_parsed_json", postgresql.JSONB(), nullable=True),
+        sa.Column("linkedin_parsed_json", sa.JSON(), nullable=True),
         sa.Column(
             "preferences",
-            postgresql.JSONB(),
-            server_default=sa.text("'{}'::jsonb"),
+            sa.JSON(),
+            server_default=sa.text("'{}'"),
             nullable=False,
         ),
         sa.Column(
@@ -74,42 +73,45 @@ def upgrade() -> None:
         ),
         sa.Column(
             "llm_escalation",
-            postgresql.JSONB(),
-            server_default=sa.text("'{}'::jsonb"),
+            sa.JSON(),
+            server_default=sa.text("'{}'"),
             nullable=False,
         ),
         sa.Column(
-            "auto_apply_enabled", sa.Boolean(), server_default=sa.text("false"), nullable=False
+            "auto_apply_enabled",
+            sa.Boolean(),
+            server_default=sa.text("false"),
+            nullable=False,
         ),
         sa.Column(
             "auto_apply_allowlist",
-            postgresql.ARRAY(sa.String),
-            server_default="{}",
+            sa.JSON(),
+            server_default=sa.text("'[]'"),
             nullable=False,
         ),
         sa.Column(
             "tailoring_thresholds",
-            postgresql.JSONB(),
-            server_default=sa.text("'{}'::jsonb"),
+            sa.JSON(),
+            server_default=sa.text("'{}'"),
             nullable=False,
         ),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
     )
 
     op.create_table(
         "jobs",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("source", sa.String(50), nullable=False),
         sa.Column("external_id", sa.String(200), nullable=False),
         sa.Column("url", sa.Text(), nullable=False),
@@ -123,17 +125,17 @@ def upgrade() -> None:
         sa.Column("description_html", sa.Text(), nullable=True),
         sa.Column("description_text", sa.Text(), nullable=True),
         sa.Column("posted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("raw_payload", postgresql.JSONB(), nullable=True),
+        sa.Column("raw_payload", sa.JSON(), nullable=True),
         sa.Column(
             "first_seen_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
         sa.Column(
             "last_seen_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
         sa.UniqueConstraint("source", "external_id", name="uq_jobs_source_extid"),
@@ -143,16 +145,16 @@ def upgrade() -> None:
 
     op.create_table(
         "matches",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column(
             "user_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
             "job_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("jobs.id", ondelete="CASCADE"),
             nullable=False,
         ),
@@ -161,18 +163,18 @@ def upgrade() -> None:
         sa.Column("seniority_match", sa.Numeric(5, 4), nullable=True),
         sa.Column("must_have_cov", sa.Numeric(5, 4), nullable=True),
         sa.Column("comp_match", sa.Numeric(5, 4), nullable=True),
-        sa.Column("reasoning", postgresql.JSONB(), nullable=True),
+        sa.Column("reasoning", sa.JSON(), nullable=True),
         sa.Column("status", sa.String(30), nullable=False, server_default="new"),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
         sa.UniqueConstraint("user_id", "job_id", name="uq_matches_user_job"),
@@ -181,10 +183,10 @@ def upgrade() -> None:
 
     op.create_table(
         "tailored_artifacts",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column(
             "match_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("matches.id", ondelete="CASCADE"),
             nullable=False,
             unique=True,
@@ -192,14 +194,14 @@ def upgrade() -> None:
         sa.Column("resume_pdf_path", sa.Text(), nullable=True),
         sa.Column("resume_docx_path", sa.Text(), nullable=True),
         sa.Column("resume_text", sa.Text(), nullable=True),
-        sa.Column("resume_diff", postgresql.JSONB(), nullable=True),
+        sa.Column("resume_diff", sa.JSON(), nullable=True),
         sa.Column("cover_letter_pdf", sa.Text(), nullable=True),
         sa.Column("cover_letter_text", sa.Text(), nullable=True),
         sa.Column("skill_gap_notes", sa.Text(), nullable=True),
         sa.Column(
             "generated_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
         sa.Column("model_used", sa.String(100), nullable=True),
@@ -210,22 +212,22 @@ def upgrade() -> None:
 
     op.create_table(
         "applications",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column(
             "match_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("matches.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
             "user_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),
         sa.Column(
             "job_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("jobs.id", ondelete="CASCADE"),
             nullable=False,
         ),
@@ -238,24 +240,29 @@ def upgrade() -> None:
         sa.Column("user_outcome_note", sa.Text(), nullable=True),
         sa.Column("outcome_updated_at", sa.DateTime(timezone=True), nullable=True),
     )
-    op.create_index("ix_applications_user_status", "applications", ["user_id", "status"])
+    op.create_index(
+        "ix_applications_user_status", "applications", ["user_id", "status"]
+    )
 
     op.create_table(
         "source_configs",
         sa.Column("source", sa.String(50), primary_key=True),
         sa.Column(
-            "enabled", sa.Boolean(), nullable=False, server_default=sa.text("true")
+            "enabled",
+            sa.Boolean(),
+            nullable=False,
+            server_default=sa.text("true"),
         ),
         sa.Column(
             "per_profile_overrides",
-            postgresql.JSONB(),
-            server_default=sa.text("'{}'::jsonb"),
+            sa.JSON(),
+            server_default=sa.text("'{}'"),
             nullable=False,
         ),
         sa.Column(
             "rate_limit",
-            postgresql.JSONB(),
-            server_default=sa.text("'{}'::jsonb"),
+            sa.JSON(),
+            server_default=sa.text("'{}'"),
             nullable=False,
         ),
         sa.Column("api_key_env", sa.String(100), nullable=True),
@@ -265,16 +272,16 @@ def upgrade() -> None:
         "match_weight_overrides",
         sa.Column(
             "user_id",
-            postgresql.UUID(as_uuid=True),
+            sa.Uuid(),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             primary_key=True,
         ),
-        sa.Column("weights", postgresql.JSONB(), nullable=False),
+        sa.Column("weights", sa.JSON(), nullable=False),
         sa.Column("sample_size", sa.Integer(), nullable=False),
         sa.Column(
             "computed_at",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
             nullable=False,
         ),
     )

@@ -23,8 +23,13 @@ static/css/tailwind.css
 .vscode/
 dist/
 build/
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
 *.min.js
 !app/static/js/htmx.min.js
 !app/static/js/alpine.min.js
 *.min.css
 !app/static/css/tailwind.css
+

@@ -1,8 +1,8 @@
 """SQLAlchemy ORM models for all 8 tables defined in spec section 3.
 
-JSONB is used on Postgres and falls back to generic JSON on other dialects
-(used in unit tests against SQLite). ARRAY likewise falls back to JSON
-text serialization on non-Postgres dialects.
+Storage: SQLite (single file). The schema is portable — types used are
+SQLAlchemy generic types (Uuid, JSON, String, Numeric) so the same models
+also work on Postgres if a future deployment needs it.
 """
 from __future__ import annotations
 
@@ -21,16 +21,16 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    Uuid,
     func,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
-# Type aliases that work on both Postgres (production) and SQLite (tests).
-JSONType = JSON().with_variant(JSONB(), "postgresql")
-StringListType = ARRAY(String).with_variant(JSON(), "sqlite")
+# Portable types — work on both SQLite and Postgres.
+JSONType = JSON()
+StringListType = JSON()  # stored as a JSON array; app layer treats as list[str]
 
 
 def _uuid() -> uuid.UUID:
@@ -41,7 +41,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=_uuid
+        Uuid(as_uuid=True), primary_key=True, default=_uuid
     )
     email: Mapped[str] = mapped_column(String(320), unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -60,7 +60,7 @@ class Profile(Base):
     __tablename__ = "profiles"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )
@@ -100,7 +100,7 @@ class Job(Base):
     __tablename__ = "jobs"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=_uuid
+        Uuid(as_uuid=True), primary_key=True, default=_uuid
     )
     source: Mapped[str] = mapped_column(String(50), nullable=False)
     external_id: Mapped[str] = mapped_column(String(200), nullable=False)
@@ -132,13 +132,13 @@ class Match(Base):
     __tablename__ = "matches"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=_uuid
+        Uuid(as_uuid=True), primary_key=True, default=_uuid
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
     job_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE")
+        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE")
     )
     match_score: Mapped[float] = mapped_column(Numeric(5, 4), nullable=False)
     jd_quality: Mapped[Optional[float]] = mapped_column(Numeric(5, 4))
@@ -170,10 +170,10 @@ class TailoredArtifact(Base):
     __tablename__ = "tailored_artifacts"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=_uuid
+        Uuid(as_uuid=True), primary_key=True, default=_uuid
     )
     match_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("matches.id", ondelete="CASCADE"),
         unique=True,
     )
@@ -199,16 +199,16 @@ class Application(Base):
     __tablename__ = "applications"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=_uuid
+        Uuid(as_uuid=True), primary_key=True, default=_uuid
     )
     match_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("matches.id", ondelete="CASCADE")
+        Uuid(as_uuid=True), ForeignKey("matches.id", ondelete="CASCADE")
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
     job_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE")
+        Uuid(as_uuid=True), ForeignKey("jobs.id", ondelete="CASCADE")
     )
     mode: Mapped[str] = mapped_column(String(30), nullable=False)
     status: Mapped[str] = mapped_column(String(30), nullable=False, default="queued")
@@ -236,7 +236,7 @@ class MatchWeightOverride(Base):
     __tablename__ = "match_weight_overrides"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )
